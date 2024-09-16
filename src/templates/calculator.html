@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <!-- Включение Bootstrap CSS через CDN -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+  <div class="container d-flex flex-column align-items-center justify-content-center min-vh-100">
+    <!-- Поле с именем пользователя -->
+    <div>Имя пользователя</div>
+    <input class="alert alert-secondary mb-4" role="alert" id="user-name" ></input>
+
+    <!-- Калькулятор -->
+    <div class="calculator border border-secondary rounded p-4">
+      <input type="text" class="form-control mb-3" id="display" disabled />
+
+      <div class="row mb-2">
+        <div class="col">
+          <button class="btn btn-light btn-block" onclick="clearDisplay()">C</button>
+        </div>
+        <div class="col">
+          <button class="btn btn-light btn-block" onclick="appendToDisplay('/')">/</button>
+        </div>
+        <div class="col">
+          <button class="btn btn-light btn-block" onclick="appendToDisplay('*')">*</button>
+        </div>
+        <div class="col">
+          <button class="btn btn-light btn-block" onclick="appendToDisplay('-')">-</button>
+        </div>
+      </div>
+
+      <div class="row mb-2">
+        <div class="col">
+          <button class="btn btn-light btn-block" onclick="appendToDisplay('7')">7</button>
+        </div>
+        <div class="col">
+          <button class="btn btn-light btn-block" onclick="appendToDisplay('8')">8</button>
+        </div>
+        <div class="col">
+          <button class="btn btn-light btn-block" onclick="appendToDisplay('9')">9</button>
+        </div>
+        <div class="col">
+          <button class="btn btn-light btn-block" onclick="appendToDisplay('+')">+</button>
+        </div>
+      </div>
+
+      <div class="row mb-2">
+        <div class="col">
+          <button class="btn btn-light btn-block" onclick="appendToDisplay('4')">4</button>
+        </div>
+        <div class="col">
+          <button class="btn btn-light btn-block" onclick="appendToDisplay('5')">5</button>
+        </div>
+        <div class="col">
+          <button class="btn btn-light btn-block" onclick="appendToDisplay('6')">6</button>
+        </div>
+        <div class="col">
+          <button class="btn btn-primary btn-block" onclick="calculateResult()">=</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <button class="btn btn-light btn-block" onclick="appendToDisplay('1')">1</button>
+        </div>
+        <div class="col">
+          <button class="btn btn-light btn-block" onclick="appendToDisplay('2')">2</button>
+        </div>
+        <div class="col">
+          <button class="btn btn-light btn-block" onclick="appendToDisplay('3')">3</button>
+        </div>
+        <div class="col">
+          <button class="btn btn-light btn-block" onclick="appendToDisplay('0')">0</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Включение Bootstrap JS и зависимостей через CDN -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+  <script>
+    function generateRandomNumber() {
+      return Math.floor(10000000 + Math.random() * 90000000);
+    }
+    document.getElementById('user-name').value = 'user' + generateRandomNumber();
+
+    function appendToDisplay(value) {
+      document.getElementById('display').value += value;
+    }
+
+    function clearDisplay() {
+      document.getElementById('display').value = '';
+    }
+
+    function calculateResult() {
+  try {
+    let display = document.getElementById('display');
+    let expression = display.value;
+    let result = eval(expression);
+    display.value = result;
+    let userName = document.getElementById('user-name').value;
+    if (result) {
+      sendDataToServer(userName, expression, result);
+    }
+    else {
+      alert("Ошибка, повторите попытку")
+    }
+  } catch (error) {
+    document.getElementById('display').value = 'Error';
+  }
+}
+
+function sendDataToServer(userName, expression, result) {
+  fetch('/add', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': '{{ csrf_token }}'
+    },
+    body: JSON.stringify({
+      username: userName,
+      expression: expression,
+      result: result
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      console.log('Данные успешно сохранены');
+    } else {
+      console.log('Ошибка при сохранении данных');
+    }
+  })
+  .catch(error => {
+    console.error('Ошибка при отправке данных:', error);
+  });
+}
+  </script>
+{% endblock %}
